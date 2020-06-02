@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const sprintf = require('sprintf-js').sprintf;
 
-var counter = 0;
 exports.counterFile = path.join(__dirname, './counter.txt');
+
 // Private helper functions ////////////////////////////////////////////////////
 
 // Zero padded numbers can only be represented as strings.
@@ -21,10 +21,13 @@ const readCounter = (callback) => {
       callback(null, 0);
     } else {
       callback(null, Number(fileData));
+
     }
   });
+
 };
 
+// console.log('counter', counter);
 const writeCounter = (count, callback) => {
   var counterString = zeroPaddedNumber(count);
   fs.writeFile(exports.counterFile, counterString, (err) => {
@@ -37,27 +40,14 @@ const writeCounter = (count, callback) => {
 };
 
 // Public API - Fix this function //////////////////////////////////////////////
-const callbackDefault = () => {};
-exports.getNextUniqueId = (callback = callbackDefault) => {
-  readCounter((err, count)=>(counter = count ));
-  counter = counter + 1;
-  writeCounter(counter, (err, counterString) => {
-    // callback(err, counterString)
-    // return counterString;
-    if (err) {
-      throw ('err man');
-    } else {
-      callback(err, counterString);
-    }
-  });
-  //callback(err, zeroPaddedNumber(counter));
-  return zeroPaddedNumber(counter);
-};
-// console.log('dirname', __dirname);
-// console.log(path.join(__dirname, 'counter.txt'));
-console.log('get unique id:', exports.getNextUniqueId());
 
+
+exports.getNextUniqueId = (callback) => {
+  readCounter((err, count)=>{
+    count = count + 1;
+    writeCounter(count, callback);
+  });
+};
 
 // Configuration -- DO NOT MODIFY //////////////////////////////////////////////
-
 

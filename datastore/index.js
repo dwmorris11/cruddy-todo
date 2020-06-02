@@ -6,14 +6,30 @@ const counter = require('./counter');
 var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
+var dirpath = path.join(__dirname, 'datastore/data/');
 
 exports.create = (text, callback) => {
-  var id = counter.getNextUniqueId();
-  items[id] = text;
-  callback(null, { id, text });
+  counter.getNextUniqueId((err, id) => {
+    items[id] = text;
+    fs.writeFile(`${exports.dataDir}/${id}.txt`, text, (err) => {
+      if (err) {
+        throw ('error writing text in ' + id + '.txt');
+      } else {
+        callback (null, {id, text});
+      }
+    });
+  });
 };
 
 exports.readAll = (callback) => {
+  const allFiles = fs.readdirSync(exports.dataDir).forEach(file => {
+    id = file.slice(0, 5);
+    //readOne  = get text in the file
+    exports.readOne(id, (item) => {
+      items[item.id] = item.text;
+    });
+    //insert into items object the id and the text
+  });
   var data = _.map(items, (text, id) => {
     return { id, text };
   });
@@ -29,6 +45,9 @@ exports.readOne = (id, callback) => {
   }
 };
 
+
+
+
 exports.update = (id, text, callback) => {
   var item = items[id];
   if (!item) {
@@ -42,12 +61,14 @@ exports.update = (id, text, callback) => {
 exports.delete = (id, callback) => {
   var item = items[id];
   delete items[id];
-  if (!item) {
-    // report an error if item not found
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback();
-  }
+  fs.unlink(`${exports.dataDir}/${id}.txt`, () => {
+    if (!item) {
+      // report an error if item not found
+      callback(new Error(`No item with id: ${id}`));
+    } else {
+      callback();
+    }
+  });
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
