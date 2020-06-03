@@ -2,15 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+const Promise = require('bluebird');
+const promiseReadFile = Promise.promisify(fs.readFile);
 
-var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
-var dirpath = path.join(__dirname, 'datastore/data/');
 
 exports.create = (text, callback) => {
   counter.getNextUniqueId((err, id) => {
-    items[id] = text;
     fs.writeFile(`${exports.dataDir}/${id}.txt`, text, (err) => {
       if (err) {
         throw ('error writing text in ' + id + '.txt');
@@ -22,27 +21,24 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
-  items = {};
   fs.readdir(exports.dataDir, (err, files) => {
     if (err) {
       callback(err);
     }
+    console.log('files: ', files);
     var hold = _.map(files, (file) => {
       var id = path.basename(file, '.txt');
-      return {id: id, text: id};
-      // var returnVariable;
-      // fs.readFile(`${exports.dataDir}/${id}.txt`, (err, string) => {
-      //   if (err) {
-      //     console.log('err: ', err);
-      //     callback(err);
-      //   }
-      //   console.log({ id: id, text: String(string) });
-      //   returnVariable = { id: id, text: String(string) };
-      // });
-      // console.log('return: ', returnVariable);
-      // return returnVariable;
+      file = path.join(exports.dataDir, file);
+      return promiseReadFile(file).then( (text) => {
+        return {id: id, text: String(text)};
+      }
+      );
     });
-    callback(null, hold);
+    Promise.all(hold).then( (todos)=> {
+      console.log('todos: ', todos);
+      callback(null, todos);
+    }
+    );
   });
 };
 
