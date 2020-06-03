@@ -25,7 +25,6 @@ exports.readAll = (callback) => {
     if (err) {
       callback(err);
     }
-    console.log('files: ', files);
     var hold = _.map(files, (file) => {
       var id = path.basename(file, '.txt');
       file = path.join(exports.dataDir, file);
@@ -35,7 +34,6 @@ exports.readAll = (callback) => {
       );
     });
     Promise.all(hold).then( (todos)=> {
-      console.log('todos: ', todos);
       callback(null, todos);
     }
     );
